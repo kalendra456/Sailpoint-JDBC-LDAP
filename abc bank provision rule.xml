@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule created="1669635413250" id="c0a8380184bd10cb8184be069502003d" language="beanshell" name="abc bank provision rule" type="JDBCProvision">
+  <Description>This rule is used by the JDBC connector to do provisioning of the data .</Description>
+  <Signature returnType="ProvisioningResult">
+    <Inputs>
+      <Argument name="log" type="org.apache.commons.logging.Log">
+        <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+      </Argument>
+      <Argument name="context" type="sailpoint.api.SailPointContext">
+        <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+      </Argument>
+      <Argument name="application">
+        <Description>
+                The application whose data file is being processed.
+                </Description>
+      </Argument>
+      <Argument name="schema">
+        <Description>
+                The Schema currently in use.
+                </Description>
+      </Argument>
+      <Argument name="connection">
+        <Description>
+                A connection object to connect to database.
+                </Description>
+      </Argument>
+      <Argument name="plan">
+        <Description>
+                The ProvisioningPlan created against the JDBC application.
+                </Description>
+      </Argument>
+    </Inputs>
+    <Returns>
+      <Argument name="result">
+        <Description>
+                A Provisioning Result object is desirable to return the status.IT can be a new object or part of  Provisioning Plan
+                </Description>
+      </Argument>
+    </Returns>
+  </Signature>
+  <Source>import java.sql.Connection;
+  import java.sql.DriverManager;
+  import java.sql.PreparedStatement;
+  import java.sql.SQLException;
+  import java.sql.Types;
+  import java.util.List;
+  import sailpoint.api.SailPointContext;
+  import sailpoint.connector.JDBCConnector;
+  import sailpoint.object.Application;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.object.ProvisioningPlan.PermissionRequest;
+  import sailpoint.object.ProvisioningResult;
+  import sailpoint.object.Schema;
+  import sailpoint.tools.xml.XMLObjectFactory;
+  import org.apache.commons.logging.LogFactory;
+  import org.apache.commons.logging.Log;
+
+  public String getAttributeRequestValue(AccountRequest acctReq, String attribute) {
+    if ( acctReq != null ) {
+      AttributeRequest attrReq = acctReq.getAttributeRequest(attribute);
+      if ( attrReq != null ) {
+        return attrReq.getValue();
+      }
+    }
+    return null;
+  }
+  ProvisioningResult result = new ProvisioningResult();
+  if ( plan != null ) {
+    List accounts = plan.getAccountRequests();
+    if ( ( accounts != null ) &amp;&amp; ( accounts.size() > 0 ) ) {
+      for ( AccountRequest account : accounts ) {
+        try {
+          if ( AccountRequest.Operation.Create.equals( account.getOperation() ) ) {
+            PreparedStatement statement = connection.prepareStatement
+			( "insert into accounts (AccountNumber,Privilege,AccountStatus) values (?,?,?)" );
+            statement.setString ( 1, (String) account.getNativeIdentity() );
+		    statement.setString ( 2, getAttributeRequestValue(account,"Privilege"));
+			statement.setInt ( 3, 1);
+            statement.executeUpdate();
+            result.setStatus( ProvisioningResult.STATUS_COMMITTED );
+          }
+        }
+        catch( SQLException e ) {
+          result.setStatus( ProvisioningResult.STATUS_FAILED );
+          result.addError( e );
+        }
+      }
+    }
+  }
+  return result;</Source>
+</Rule>

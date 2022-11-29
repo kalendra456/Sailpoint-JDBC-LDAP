@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule created="1669714528993" id="c0a8f9ca84c212cb8184c2bdcae1016e" language="beanshell" modified="1669715405149" name="Guvi-Employee-dn-Attribute-Rule" type="FieldValue">
+  <Description>This rule can be used to generate a field value (eg - an account name) using data from the given Identity. If this rule is run in the context of a workflow step then the arguments passed into the step will also be available. Also, any field values that have been processed so far from the policy related to the Application/Role will be available.</Description>
+  <Signature returnType="String"/>
+  <Source>import sailpoint.object.Identity; 
+import sailpoint.tools. Util;
+int number = Util.atoi(identity.getName());
+String type = identity.getAttribute("employeetype");
+String dn="";
+if(Util.isNotNullOrEmpty(type) &amp;&amp; type.equalsIgnoreCase("Employee")){
+dn="cn="+"E"+Util.itoa(number)+",ou=employees,ou=users,dc=guvi,dc=com";
+}else{
+}
+dn="cn="+"C"+Util.itoa(number)+",ou=contractors,ou=users,dc=guvi,dc=com";
+return dn;</Source>
+</Rule>
